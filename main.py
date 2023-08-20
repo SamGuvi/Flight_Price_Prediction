@@ -1,6 +1,26 @@
 import streamlit as st
-import pickle
+import pickle,json, base64
 from datetime import datetime, timedelta
+
+def get_img_as_base64(file):
+    with open(file,"rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+img = get_img_as_base64("flight.jpg")
+page_bg_img = f"""
+<style>
+[data-testid="stAppViewContainer"] > .main {{
+background-image :url("data:image/png;base64,{img}");
+background-size : cover;
+}}
+[data-testid="stHeader"]{{
+background:rgba(0,0,0,0);
+}}
+</style>
+
+"""
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
 
 st.title("Flight Price Prediction Application")
 #Airline___________________________________________________________________________________________________
@@ -29,12 +49,14 @@ Date=st.sidebar.date_input("Departure Date",min_value=datetime.today(),max_value
 daY_diff=datetime.strptime(str(Date),"%Y-%m-%d")-datetime.today()
 daY_diff=int(daY_diff.days+1)
 #Load the saved model___________________________________________________________________________________________________
+def load_lottiefile(filepath:str):
+        with open(filepath,"r") as f:
+            return json.load(f)
 
 f=[Airline,Source,Depature_Time,Stop,Arrival_Time,Destination,Class,daY_diff]
 if None not in f and st.button("Predict"):
     Features=[Airline_dict[Airline],Source_dict[Source],Depature_Time_dict[Depature_Time],Stop_dict[Stop],Arrival_Time_dict[Arrival_Time],Destination_dict[Destination],Class_dict[Class],daY_diff]
-    
-    
     Model=pickle.load(open('LinearModel.pkl','rb'))
     prediction=Model.predict([Features])[0]
     st.title(f"Your Flight Price is Rs.{round(prediction)}/-")
+    
